@@ -3,6 +3,7 @@
   "displayName": "HipJoeOrder",
   "expo": {
     "name": "HipJoeOrder",
-    "slug": "HipJoeOrder"
+    "slug": "HipJoeOrder",
+    "sdkVersion": "39.0.0"
   }
 }
