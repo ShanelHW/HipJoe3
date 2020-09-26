@@ -1,4 +1,8 @@
 {
-  "name": "RNFoodDelivery",
-  "displayName": "RNFoodDelivery"
+  "name": "HipJoeOrder",
+  "displayName": "HipJoeOrder",
+  "expo": {
+    "name": "My app",
+    "slug": "my-app"
+  }
 }
