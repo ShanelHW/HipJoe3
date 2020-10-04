@@ -17,8 +17,6 @@ const BASE_URL = Config.NGROK_HTTPS_URL;
 
 const GOOGLE_API_KEY = Config.GOOGLE_API_KEY;
 
-import {regionFrom} from '../helpers/location';
-
 import {AppContext} from '../../GlobalContext';
 
 const orderSteps = [
@@ -59,22 +57,18 @@ class TrackOrder extends Component {
 
   constructor(props) {
     super(props);
-
+  }
 
 
   render() {
-    const {driverLocation, orderStatusText} = this.state;
+    const {orderStatusText} = this.state;
 
     return (
       <View style={styles.wrapper}>
         <View style={styles.infoContainer}>
           <Text style={styles.infoText}>{orderStatusText}</Text>
 
-          <Button
-            onPress={() => this.contactDriver()}
-            title="Contact driver"
-            color="#c53c3c"
-          />
+          
         </View>
 
         <View style={styles.mapContainer}>
@@ -82,6 +76,7 @@ class TrackOrder extends Component {
             style={styles.map}
             zoomControlEnabled={true}
             initialRegion={this.customer_location}>
+
             <MapView.Marker
               coordinate={{
                 latitude: this.customer_location.latitude,
@@ -89,14 +84,6 @@ class TrackOrder extends Component {
               }}
               title={'Your location'}
             />
-
-            {driverLocation && (
-              <MapView.Marker
-                coordinate={driverLocation}
-                title={'Driver location'}
-                pinColor={'#6f42c1'}
-              />
-            )}
 
             <MapView.Marker
               coordinate={{
@@ -107,32 +94,6 @@ class TrackOrder extends Component {
               pinColor={'#4CDB00'}
             />
 
-            {driverLocation && (
-              <MapViewDirections
-                origin={driverLocation}
-                destination={{
-                  latitude: this.restaurant_location[0],
-                  longitude: this.restaurant_location[1],
-                }}
-                apikey={GOOGLE_API_KEY}
-                strokeWidth={3}
-                strokeColor="hotpink"
-              />
-            )}
-
-            <MapViewDirections
-              origin={{
-                latitude: this.restaurant_location[0],
-                longitude: this.restaurant_location[1],
-              }}
-              destination={{
-                latitude: this.customer_location.latitude,
-                longitude: this.customer_location.longitude,
-              }}
-              apikey={GOOGLE_API_KEY}
-              strokeWidth={3}
-              strokeColor="#1b77fb"
-            />
           </MapView>
         </View>
       </View>
@@ -155,9 +116,7 @@ const styles = StyleSheet.create({
   mapContainer: {
     flex: 9,
   },
-  map: {
-    ...StyleSheet.absoluteFillObject,
-  },
+  
 });
 
 export default TrackOrder;
