@@ -22,10 +22,9 @@ import {regionFrom} from '../helpers/location';
 import {AppContext} from '../../GlobalContext';
 
 const orderSteps = [
-  'Finding a driver',
-  'Driver is on the way to pick up your order',
-  'Driver has picked up your order and is on the way to deliver it',
-  'Driver has delivered your order',
+  'Processing your order',
+  'Preparing your order',
+  'Your order is ready',
 ];
 
 RNPusherPushNotifications.setInstanceId(Config.BEAMS_INSTANCE_ID);
@@ -53,134 +52,15 @@ class TrackOrder extends Component {
 
   state = {
     isSearching: true,
-    hasDriver: false,
-    driverLocation: null,
+    isProcessed: false,
+    isPrepared: false,
     orderStatusText: orderSteps[0],
   };
 
   constructor(props) {
     super(props);
 
-    this.customer_location = this.props.navigation.getParam(
-      'customer_location',
-    ); // customer's location
-    this.restaurant_location = this.props.navigation.getParam(
-      'restaurant_location',
-    );
 
-    this.customer_address = this.props.navigation.getParam('customer_address');
-    this.restaurant_address = this.props.navigation.getParam(
-      'restaurant_address',
-    );
-
-    this.available_drivers_channel = null; // the pusher channel where all drivers and customers are subscribed to
-    this.user_ride_channel = null; // the pusher channel exclusive to the customer and driver in a given ride
-    this.pusher = null;
-  }
-
-  componentDidMount() {
-    this.setState({
-      isSearching: true, // show the loader
-    });
-
-    this.pusher = new Pusher(CHANNELS_APP_KEY, {
-      authEndpoint: `${BASE_URL}/pusher/auth`,
-      cluster: CHANNELS_APP_CLUSTER,
-      encrypted: true,
-    });
-
-    this.available_drivers_channel = this.pusher.subscribe(
-      'private-available-drivers',
-    );
-
-    this.available_drivers_channel.bind('pusher:subscription_succeeded', () => {
-      // make a request to all drivers
-      setTimeout(() => {
-        this.available_drivers_channel.trigger('client-driver-request', {
-          customer: {username: this.context.user_id},
-          restaurant_location: this.restaurant_location,
-          customer_location: this.customer_location,
-          restaurant_address: this.restaurant_address,
-          customer_address: this.customer_address,
-        });
-      }, 2000);
-    });
-
-    this.user_ride_channel = this.pusher.subscribe(
-      'private-ride-' + this.context.user_id,
-    );
-
-    this.user_ride_channel.bind('client-driver-response', data => {
-      // customer responds to driver's response
-      const {hasDriver} = this.state;
-      this.user_ride_channel.trigger('client-driver-response', {
-        response: hasDriver ? 'no' : 'yes',
-        room_id: hasDriver ? '0' : this.context.room_id,
-        room_name: hasDriver ? '' : this.context.room_name,
-      });
-
-      if (!hasDriver) {
-        setTimeout(async () => {
-          const res = await axios.post(
-            `${BASE_URL}/push/${this.context.room_id}`,
-            {
-              push_type: 'customer_confirmed',
-              data: this.context.user_name,
-            },
-          );
-        }, 5000);
-      }
-    });
-
-    this.user_ride_channel.bind('client-found-driver', data => {
-      // found driver, the customer has no say about this.
-      const driverLocation = regionFrom(
-        data.location.latitude,
-        data.location.longitude,
-        data.location.accuracy,
-      );
-
-      this.setState({
-        hasDriver: true,
-        isSearching: false,
-        driverLocation,
-      });
-
-      Alert.alert(
-        'Driver found',
-        "We found you a driver. They're on their way to pick up your order.",
-      );
-    });
-
-    this.user_ride_channel.bind('client-driver-location', data => {
-      // driver location received
-      let driverLocation = regionFrom(
-        data.latitude,
-        data.longitude,
-        data.accuracy,
-      );
-
-      this.setState({
-        driverLocation,
-      });
-    });
-
-    this.user_ride_channel.bind('client-order-update', data => {
-      this.setState({
-        orderStatusText: orderSteps[data.step],
-      });
-    });
-
-    subscribeToRoom(this.context.room_id);
-
-    RNPusherPushNotifications.on('notification', noty => {
-      Alert.alert(noty.title, noty.body);
-    });
-  }
-
-  contactDriver = () => {
-    this.props.navigation.navigate('ContactDriver');
-  };
 
   render() {
     const {driverLocation, orderStatusText} = this.state;
